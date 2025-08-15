@@ -131,7 +131,7 @@ def insert_update_model_action(
     repo = ModelActionRepo()
     endpoint_id = info.context["endpoint_id"]
     if "model_action_uuid" not in kwargs:
-        kwargs["model_action_uuid"] = etcd_client.new_id()
+        kwargs["model_action_uuid"] = f"act-{etcd_client.new_id()[:8]}"
     key = repo.key(endpoint_id, kwargs["model_action_uuid"])
 
     value = dict(

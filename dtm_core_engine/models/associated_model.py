@@ -179,7 +179,7 @@ def insert_update_associated_model(
     repo = AssociatedModelRepo()
     endpoint_id = info.context["endpoint_id"]
     if "associated_model_uuid" not in kwargs:
-        kwargs["associated_model_uuid"] = etcd_client.new_id()
+        kwargs["associated_model_uuid"] = f"asc-{etcd_client.new_id()[:8]}"
     key = repo.key(endpoint_id, kwargs["associated_model_uuid"])
 
     value = dict(

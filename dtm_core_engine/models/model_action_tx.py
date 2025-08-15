@@ -111,7 +111,7 @@ def insert_update_model_action_tx(
 ) -> ModelActionTxType:
     repo = ModelActionTxRepo()
     if "transaction_uuid" not in kwargs:
-        kwargs["transaction_uuid"] = etcd_client.new_id()
+        kwargs["transaction_uuid"] = f"tx-{etcd_client.new_id()[:8]}"
     key = repo.key(kwargs["model_action_uuid"], kwargs["transaction_uuid"])
 
     value = dict(
