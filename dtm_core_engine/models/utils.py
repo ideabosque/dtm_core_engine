@@ -20,7 +20,7 @@ def match(doc: dict, **criteria) -> bool:
             field, op = key.split("__", 1)
         else:
             field, op = key, "eq"
-        val = doc.get(field, None)
+        val = doc.get(field)
 
         if op == "eq":
             if val != expected:

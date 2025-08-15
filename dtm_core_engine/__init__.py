@@ -1,3 +1,8 @@
-# Public API shortcuts
-from .handlers.etcd_client import get_client
-from .models.utils import ETCD_PREFIX
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+
+__author__ = "bibow"
+
+__all__ = ["main"]
+from .main import DTMCoreEngine, deploy

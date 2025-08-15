@@ -3,10 +3,15 @@ from __future__ import print_function
 
 __author__ = "bibow"
 
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from ..handlers.etcd_client import delete_key as delkey
-from ..handlers.etcd_client import has_any, iter_keys, now_iso
+import pendulum
+from graphene import ResolveInfo
+
+from silvaengine_utility import Utility
+
+from ..handlers import etcd_client
+from ..types.model_action import ModelActionListType, ModelActionType
 from .base import BaseRepo
 from .utils import ETCD_PREFIX, match
 
@@ -23,30 +28,6 @@ class ModelActionRepo(BaseRepo):
     def key(self, endpoint_id: str, model_action_uuid: str) -> str:
         return k_model_actions(endpoint_id, model_action_uuid)
 
-    def create(
-        self,
-        endpoint_id: str,
-        model_action_uuid: str,
-        *,
-        model_uuid: str,
-        action_name: str,
-        associated_model_uuids: List[str],
-    ) -> bool:
-        value = dict(
-            model_action_uuid=model_action_uuid,
-            endpoint_id=endpoint_id,
-            model_uuid=model_uuid,
-            action_name=action_name,
-            associated_model_uuids=associated_model_uuids,
-            created_at=now_iso(),
-            updated_at=now_iso(),
-            updated_by="system",
-        )
-        idx = [k_idx_endpoint_actions(endpoint_id, model_action_uuid)]
-        return self.create_if_absent(
-            self.key(endpoint_id, model_action_uuid), value, idx
-        )
-
     def list(
         self,
         *,
@@ -57,19 +38,27 @@ class ModelActionRepo(BaseRepo):
     ) -> List[dict]:
         docs: List[dict] = []
         if endpoint_id:
+            # Try index-based lookup first
             ids = [
                 k.rsplit("/", 1)[-1]
-                for k in iter_keys(
-                    f"{ETCD_PREFIX}/index/by-endpoint/{endpoint_id}/model_actions/",
-                    etcd=self.etcd,
+                for k in etcd_client.iter_keys(
+                    f"{ETCD_PREFIX}/index/by-endpoint/{endpoint_id}/model_actions/"
                 )
             ]
             for mid in ids:
-                doc = self.get(self.key(endpoint_id, mid))
+                doc = etcd_client.get_json(self.key(endpoint_id, mid))
                 if doc:
                     docs.append(doc)
+
+            # Fallback to direct prefix scan if index is empty
+            if not docs:
+                for _k, payload in etcd_client.iter_prefix(
+                    f"{ETCD_PREFIX}/model_actions/{endpoint_id}/"
+                ):
+                    if payload:
+                        docs.append(payload)
         else:
-            for _k, payload in self._iter_prefix(f"{ETCD_PREFIX}/model_actions/"):
+            for _k, payload in etcd_client.iter_prefix(f"{ETCD_PREFIX}/model_actions/"):
                 if payload:
                     docs.append(payload)
 
@@ -85,14 +74,83 @@ class ModelActionRepo(BaseRepo):
         self, endpoint_id: str, model_action_uuid: str
     ) -> Tuple[bool, List[str]]:
         blockers: List[str] = []
-        if has_any(
-            f"{ETCD_PREFIX}/model_action_tx/{model_action_uuid}/", etcd=self.etcd
-        ):
+        if etcd_client.has_any(f"{ETCD_PREFIX}/model_action_tx/{model_action_uuid}/"):
             blockers.append("Transactions exist for this model action")
         if blockers:
             return False, blockers
         ok = self.delete_key_only(self.key(endpoint_id, model_action_uuid))
         if not ok:
             return False, ["Delete failed"]
-        delkey(k_idx_endpoint_actions(endpoint_id, model_action_uuid), etcd=self.etcd)
+        etcd_client.delete_key(k_idx_endpoint_actions(endpoint_id, model_action_uuid))
         return True, []
+
+
+def resolve_model_action(
+    info: ResolveInfo, **kwargs: Dict[str, Any]
+) -> ModelActionType:
+    repo = ModelActionRepo()
+    model_action_uuid = kwargs.get("model_action_uuid")
+    if model_action_uuid:
+        # Direct lookup by UUID
+        key = repo.key(info.context["endpoint_id"], model_action_uuid)
+        action_data = repo.get(key)
+        if not action_data:
+            return None
+    else:
+        # List lookup
+        actions = repo.list(
+            endpoint_id=info.context["endpoint_id"],
+            model_uuid=kwargs.get("model_uuid"),
+            action_name=kwargs.get("action_name"),
+            limit=1,
+        )
+        if not actions:
+            return None
+        action_data = actions[0]
+
+    return ModelActionType(**repo._process_datetime_fields(action_data))
+
+
+def resolve_model_action_list(
+    info: ResolveInfo, **kwargs: Dict[str, Any]
+) -> ModelActionListType:
+    repo = ModelActionRepo()
+    actions = repo.list(
+        endpoint_id=info.context["endpoint_id"],
+        model_uuid=kwargs.get("model_uuid"),
+        action_name=kwargs.get("action_name"),
+        limit=kwargs.get("limit"),
+    )
+    action_list = [ModelActionType(**repo._process_datetime_fields(a)) for a in actions]
+    return ModelActionListType(model_action_list=action_list, total=len(actions))
+
+
+def insert_update_model_action(
+    info: ResolveInfo, **kwargs: Dict[str, Any]
+) -> ModelActionType:
+    repo = ModelActionRepo()
+    endpoint_id = info.context["endpoint_id"]
+    if "model_action_uuid" not in kwargs:
+        kwargs["model_action_uuid"] = etcd_client.new_id()
+    key = repo.key(endpoint_id, kwargs["model_action_uuid"])
+
+    value = dict(
+        model_action_uuid=kwargs["model_action_uuid"],
+        endpoint_id=endpoint_id,
+        model_uuid=kwargs["model_uuid"],
+        action_name=kwargs["action_name"],
+        associated_model_uuids=kwargs.get("associated_model_uuids", []),
+        updated_by="system",
+    )
+    idx_key = k_idx_endpoint_actions(endpoint_id, kwargs["model_action_uuid"])
+    action_data = repo.upsert(key, value, [idx_key])
+    return ModelActionType(**repo._process_datetime_fields(action_data))
+
+
+def delete_model_action(info: ResolveInfo, **kwargs: Dict[str, Any]) -> bool:
+    repo = ModelActionRepo()
+    endpoint_id = info.context["endpoint_id"]
+    model_action_uuid = kwargs["model_action_uuid"]
+
+    success, blockers = repo.delete_safe(endpoint_id, model_action_uuid)
+    return success
