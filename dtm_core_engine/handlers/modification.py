@@ -39,7 +39,6 @@ class ModificationHandler:
     def insert_update_model(
         endpoint_id: str, **kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
-        from graphene import ResolveInfo
 
         from ..models.model import insert_update_model
 
@@ -51,7 +50,6 @@ class ModificationHandler:
     def insert_update_model_action(
         endpoint_id: str, **kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
-        from graphene import ResolveInfo
 
         from ..models.model_action import insert_update_model_action
 
@@ -63,7 +61,6 @@ class ModificationHandler:
     def insert_update_primary_key_meta(
         endpoint_id: str, **kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
-        from graphene import ResolveInfo
 
         from ..models.primary_key_meta import insert_update_primary_key_meta
 
@@ -75,7 +72,6 @@ class ModificationHandler:
     def insert_update_associated_model(
         endpoint_id: str, **kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
-        from graphene import ResolveInfo
 
         from ..models.associated_model import insert_update_associated_model
 
@@ -87,7 +83,6 @@ class ModificationHandler:
     def insert_update_associated_model_action(
         endpoint_id: str, **kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
-        from graphene import ResolveInfo
 
         from ..models.associated_model_action import (
             insert_update_associated_model_action,
@@ -101,7 +96,6 @@ class ModificationHandler:
     def insert_update_model_action_tx(
         endpoint_id: str, **kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
-        from graphene import ResolveInfo
 
         from ..models.model_action_tx import insert_update_model_action_tx
 
