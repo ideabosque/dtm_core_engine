@@ -6,74 +6,105 @@ __author__ = "bibow"
 
 from typing import Any, Dict
 
+from graphene import ResolveInfo
+
+info = ResolveInfo(
+    field_name=None,
+    field_asts=[],
+    return_type=None,
+    parent_type=None,
+    schema=None,
+    fragments={},
+    root_value=None,
+    operation=None,
+    variable_values={},
+    context={},
+    path=None,
+)
+
 
 class ModificationHandler:
     @staticmethod
-    def insert_update_module(endpoint_id: str, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def insert_update_module(
+        endpoint_id: str, **kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
+
         from ..models.module import insert_update_module
-        from graphene import ResolveInfo
-        
-        info = ResolveInfo(None, None, None, None, None, None, None, None)
+
         info.context = {"endpoint_id": endpoint_id}
         result = insert_update_module(info, **kwargs)
-        return result.__dict__ if hasattr(result, '__dict__') else result
+        return result.__dict__ if hasattr(result, "__dict__") else result
 
     @staticmethod
-    def insert_update_model(endpoint_id: str, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
-        from ..models.model import insert_update_model
+    def insert_update_model(
+        endpoint_id: str, **kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         from graphene import ResolveInfo
-        
-        info = ResolveInfo(None, None, None, None, None, None, None, None)
+
+        from ..models.model import insert_update_model
+
         info.context = {"endpoint_id": endpoint_id}
         result = insert_update_model(info, **kwargs)
-        return result.__dict__ if hasattr(result, '__dict__') else result
+        return result.__dict__ if hasattr(result, "__dict__") else result
 
     @staticmethod
-    def insert_update_model_action(endpoint_id: str, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
-        from ..models.model_action import insert_update_model_action
+    def insert_update_model_action(
+        endpoint_id: str, **kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         from graphene import ResolveInfo
-        
-        info = ResolveInfo(None, None, None, None, None, None, None, None)
+
+        from ..models.model_action import insert_update_model_action
+
         info.context = {"endpoint_id": endpoint_id}
         result = insert_update_model_action(info, **kwargs)
-        return result.__dict__ if hasattr(result, '__dict__') else result
+        return result.__dict__ if hasattr(result, "__dict__") else result
 
     @staticmethod
-    def insert_update_primary_key_meta(endpoint_id: str, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
-        from ..models.primary_key_meta import insert_update_primary_key_meta
+    def insert_update_primary_key_meta(
+        endpoint_id: str, **kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         from graphene import ResolveInfo
-        
-        info = ResolveInfo(None, None, None, None, None, None, None, None)
+
+        from ..models.primary_key_meta import insert_update_primary_key_meta
+
         info.context = {"endpoint_id": endpoint_id}
         result = insert_update_primary_key_meta(info, **kwargs)
-        return result.__dict__ if hasattr(result, '__dict__') else result
+        return result.__dict__ if hasattr(result, "__dict__") else result
 
     @staticmethod
-    def insert_update_associated_model(endpoint_id: str, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
-        from ..models.associated_model import insert_update_associated_model
+    def insert_update_associated_model(
+        endpoint_id: str, **kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         from graphene import ResolveInfo
-        
-        info = ResolveInfo(None, None, None, None, None, None, None, None)
+
+        from ..models.associated_model import insert_update_associated_model
+
         info.context = {"endpoint_id": endpoint_id}
         result = insert_update_associated_model(info, **kwargs)
-        return result.__dict__ if hasattr(result, '__dict__') else result
+        return result.__dict__ if hasattr(result, "__dict__") else result
 
     @staticmethod
-    def insert_update_associated_model_action(endpoint_id: str, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
-        from ..models.associated_model_action import insert_update_associated_model_action
+    def insert_update_associated_model_action(
+        endpoint_id: str, **kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         from graphene import ResolveInfo
-        
-        info = ResolveInfo(None, None, None, None, None, None, None, None)
+
+        from ..models.associated_model_action import (
+            insert_update_associated_model_action,
+        )
+
         info.context = {"endpoint_id": endpoint_id}
         result = insert_update_associated_model_action(info, **kwargs)
-        return result.__dict__ if hasattr(result, '__dict__') else result
+        return result.__dict__ if hasattr(result, "__dict__") else result
 
     @staticmethod
-    def insert_update_model_action_tx(endpoint_id: str, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
-        from ..models.model_action_tx import insert_update_model_action_tx
+    def insert_update_model_action_tx(
+        endpoint_id: str, **kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         from graphene import ResolveInfo
-        
-        info = ResolveInfo(None, None, None, None, None, None, None, None)
+
+        from ..models.model_action_tx import insert_update_model_action_tx
+
         info.context = {"endpoint_id": endpoint_id}
         result = insert_update_model_action_tx(info, **kwargs)
-        return result.__dict__ if hasattr(result, '__dict__') else result
+        return result.__dict__ if hasattr(result, "__dict__") else result
