@@ -5,15 +5,12 @@ __author__ = "bibow"
 
 from typing import Any, Dict, List, Optional, Tuple
 
-import pendulum
 from graphene import ResolveInfo
-
-from silvaengine_utility import Utility
 
 from ..handlers import etcd_client
 from ..types.associated_model import AssociatedModelListType, AssociatedModelType
 from .base import BaseRepo
-from .utils import ETCD_PREFIX, match
+from .utils import ETCD_PREFIX
 
 
 def k_associated_models(endpoint_id, associated_model_uuid):

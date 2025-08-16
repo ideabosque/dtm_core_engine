@@ -4,10 +4,10 @@ from __future__ import print_function
 __author__ = "bibow"
 
 import json
-import time
 import uuid
-from typing import Any, Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
+import pendulum
 from etcd3gw import client as etcd3
 
 _ETCD = None
@@ -23,7 +23,7 @@ def get_client():
 
 
 def now_iso() -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    return pendulum.now("UTC").to_iso8601_string()
 
 
 def new_id() -> str:
@@ -34,13 +34,13 @@ def get_json(key: str):
     res = get_client().get(key)
     if not res or (isinstance(res, list) and len(res) == 0):
         return None
-    
+
     # Handle etcd3gw response format: [(value, metadata), ...]
     if isinstance(res, list) and len(res) > 0:
         val = res[0][0] if isinstance(res[0], tuple) else res[0]
     else:
         val = res
-    
+
     if isinstance(val, (bytes, bytearray)) and val:
         return json.loads(val.decode())
     elif isinstance(val, str) and val:

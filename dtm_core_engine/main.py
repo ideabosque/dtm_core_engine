@@ -10,9 +10,10 @@ from typing import Any, Dict, List
 from graphene import Schema
 
 from silvaengine_dynamodb_base import SilvaEngineDynamoDBBase
-from silvaengine_utility import Utility
 
 from .handlers.config import Config
+from .handlers.inquiry import InquiryHandler
+from .handlers.modification import ModificationHandler
 from .schema import Mutations, Query, type_class
 
 
@@ -120,6 +121,24 @@ def deploy() -> List:
                     "settings": "dtm_core",
                     "disabled_in_resources": True,  # Ignore adding to resource list.
                 },
+                "dtm_core_inquiry": {
+                    "is_static": False,
+                    "label": "DTM Core Inquiry Direct",
+                    "type": "RequestResponse",
+                    "support_methods": ["POST"],
+                    "is_auth_required": False,
+                    "is_graphql": False,
+                    "settings": "dtm_core",
+                },
+                "dtm_core_add_update": {
+                    "is_static": False,
+                    "label": "DTM Core Add Update Direct",
+                    "type": "RequestResponse",
+                    "support_methods": ["POST"],
+                    "is_auth_required": False,
+                    "is_graphql": False,
+                    "settings": "dtm_core",
+                },
             },
         }
     ]
@@ -134,6 +153,7 @@ class DTMCoreEngine(SilvaEngineDynamoDBBase):
 
         self.logger = logger
         self.setting = setting
+        self.endpoint_id = setting.get("endpoint_id")
 
     def dtm_core_graphql(self, **params: Dict[str, Any]) -> Any:
         ## Test the waters 🧪 before diving in!
@@ -148,3 +168,132 @@ class DTMCoreEngine(SilvaEngineDynamoDBBase):
             types=type_class(),
         )
         return self.graphql_execute(schema, **params)
+
+    # Unified inquiry function
+    def dtm_core_inquiry(self, **params: Dict[str, Any]) -> Any:
+        endpoint_id = params.get("endpoint_id") or self.endpoint_id
+        action = params.get("action")
+        attributes = params.get("attributes")
+
+        if action == "get_module":
+            return InquiryHandler.get_module(
+                endpoint_id,
+                attributes.get("module_uuid"),
+                attributes.get("module_name"),
+            )
+        elif action == "list_modules":
+            return InquiryHandler.list_modules(
+                endpoint_id, attributes.get("module_name"), attributes.get("limit")
+            )
+        elif action == "get_model":
+            return InquiryHandler.get_model(
+                endpoint_id,
+                attributes.get("model_uuid"),
+                attributes.get("model_name"),
+                attributes.get("module_uuid"),
+            )
+        elif action == "list_models":
+            return InquiryHandler.list_models(
+                endpoint_id,
+                attributes.get("model_name"),
+                attributes.get("module_uuid"),
+                attributes.get("limit"),
+            )
+        elif action == "get_model_action":
+            return InquiryHandler.get_model_action(
+                endpoint_id,
+                attributes.get("model_action_uuid"),
+                attributes.get("model_action_name"),
+                attributes.get("model_uuid"),
+            )
+        elif action == "list_model_actions":
+            return InquiryHandler.list_model_actions(
+                endpoint_id,
+                attributes.get("model_action_name"),
+                attributes.get("model_uuid"),
+                attributes.get("limit"),
+            )
+        elif action == "get_primary_key_meta":
+            return InquiryHandler.get_primary_key_meta(
+                endpoint_id, params["primary_key_meta_uuid"]
+            )
+        elif action == "list_primary_key_metas":
+            return InquiryHandler.list_primary_key_metas(
+                endpoint_id, attributes.get("limit")
+            )
+        elif action == "get_associated_model":
+            return InquiryHandler.get_associated_model(
+                endpoint_id,
+                attributes.get("associated_model_uuid"),
+                attributes.get("model_uuid"),
+                attributes.get("action_name_contains"),
+            )
+        elif action == "list_associated_models":
+            return InquiryHandler.list_associated_models(
+                endpoint_id,
+                attributes.get("model_uuid"),
+                attributes.get("action_name_contains"),
+                attributes.get("limit"),
+            )
+        elif action == "get_associated_model_action":
+            return InquiryHandler.get_associated_model_action(
+                attributes.get("transaction_uuid"),
+                attributes.get("status"),
+                attributes.get("action_name"),
+            )
+        elif action == "list_associated_model_actions":
+            return InquiryHandler.list_associated_model_actions(
+                attributes.get("transaction_uuid"),
+                attributes.get("status"),
+                attributes.get("action_name"),
+                attributes.get("limit"),
+            )
+        elif action == "get_model_action_tx":
+            return InquiryHandler.get_model_action_tx(
+                endpoint_id,
+                attributes.get("model_action_uuid"),
+                attributes.get("transaction_uuid"),
+                attributes.get("status"),
+            )
+        elif action == "list_model_action_txs":
+            return InquiryHandler.list_model_action_txs(
+                endpoint_id,
+                attributes.get("model_action_uuid"),
+                attributes.get("status"),
+                attributes.get("limit"),
+            )
+        else:
+            raise ValueError(f"Unknown action: {action}")
+
+    # Unified insert/update function
+    def dtm_core_add_update(self, **params: Dict[str, Any]) -> Any:
+        endpoint_id = params.get("endpoint_id") or self.endpoint_id
+        action = params.get("action")
+        attributes = params.get("attributes")
+
+        if action == "insert_update_module":
+            return ModificationHandler.insert_update_module(endpoint_id, **attributes)
+        elif action == "insert_update_model":
+            return ModificationHandler.insert_update_model(endpoint_id, **attributes)
+        elif action == "insert_update_model_action":
+            return ModificationHandler.insert_update_model_action(
+                endpoint_id, **attributes
+            )
+        elif action == "insert_update_primary_key_meta":
+            return ModificationHandler.insert_update_primary_key_meta(
+                endpoint_id, **attributes
+            )
+        elif action == "insert_update_associated_model":
+            return ModificationHandler.insert_update_associated_model(
+                endpoint_id, **attributes
+            )
+        elif action == "insert_update_associated_model_action":
+            return ModificationHandler.insert_update_associated_model_action(
+                endpoint_id, **attributes
+            )
+        elif action == "insert_update_model_action_tx":
+            return ModificationHandler.insert_update_model_action_tx(
+                endpoint_id, **attributes
+            )
+        else:
+            raise ValueError(f"Unknown action: {action}")

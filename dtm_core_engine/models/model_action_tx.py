@@ -5,10 +5,7 @@ __author__ = "bibow"
 
 from typing import Any, Dict, List, Optional, Tuple
 
-import pendulum
 from graphene import ResolveInfo
-
-from silvaengine_utility import Utility
 
 from ..handlers import etcd_client
 from ..types.model_action_tx import ModelActionTxListType, ModelActionTxType

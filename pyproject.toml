@@ -1,0 +1,20 @@
+[project]
+name = "dtm-core-engine"
+version = "0.0.1"
+description = "DTM Core Engine with FastAPI and JWT Authentication"
+authors = [{name = "Idea Bosque"}]
+dependencies = [
+  "fastapi[all]",
+  "uvicorn[standard]",
+  "python-jose[cryptography]",
+  "httpx",
+  "bcrypt",
+  "passlib[bcrypt]",
+  "graphene",
+  "boto3",
+  "SilvaEngine-DynamoDB-Base",
+  "SilvaEngine-Utility",
+]
+
+[project.scripts]
+dtm-core = "dtm_core_engine.main:main"

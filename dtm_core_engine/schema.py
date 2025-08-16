@@ -7,9 +7,7 @@ __author__ = "bibow"
 import time
 from typing import Any, Dict
 
-from graphene import Field, Int, List, ObjectType, ResolveInfo, String
-
-from silvaengine_utility import JSON
+from graphene import Field, Int, ObjectType, ResolveInfo, String
 
 from .mutations.associated_model import (
     DeleteAssociatedModel,

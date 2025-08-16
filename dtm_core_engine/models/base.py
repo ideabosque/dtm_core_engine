@@ -3,9 +3,10 @@ from __future__ import print_function
 
 __author__ = "bibow"
 
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import pendulum
+
 from ..handlers import etcd_client
 
 
@@ -18,14 +19,16 @@ class BaseRepo:
     def get(self, key: str) -> Optional[dict]:
         return etcd_client.get_json(key)
 
-    def upsert(self, key: str, value: dict, index_keys: Optional[List[str]] = None) -> dict:
+    def upsert(
+        self, key: str, value: dict, index_keys: Optional[List[str]] = None
+    ) -> dict:
         existing = etcd_client.get_json(key)
         now = etcd_client.now_iso()
-        
+
         # Preserve created_at from existing record, set updated_at to now
         value["created_at"] = existing.get("created_at", now) if existing else now
         value["updated_at"] = now
-        
+
         etcd_client.put_json(key, value)
         if index_keys:
             etcd_client.ensure_marker_keys(index_keys)
@@ -36,7 +39,7 @@ class BaseRepo:
 
     def _iter_prefix(self, prefix: str):
         return etcd_client.iter_prefix(prefix)
-    
+
     def _process_datetime_fields(self, data: dict) -> dict:
         """Process datetime fields for GraphQL type creation"""
         result = data.copy()
