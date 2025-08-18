@@ -12,6 +12,8 @@ from graphene import Schema
 from silvaengine_dynamodb_base import SilvaEngineDynamoDBBase
 
 from .handlers.config import Config
+from .handlers.data_source_loader import DataSourceLoader
+from .handlers.dtm_utility import get_class
 from .handlers.inquiry import InquiryHandler
 from .handlers.modification import ModificationHandler
 from .schema import Mutations, Query, type_class
@@ -160,7 +162,7 @@ class DTMCoreEngine(SilvaEngineDynamoDBBase):
 
         self.logger = logger
         self.setting = setting
-        self.endpoint_id = setting.get("endpoint_id")
+        self.data_source_loader = DataSourceLoader(logger)
 
     def dtm_core_graphql(self, **params: Dict[str, Any]) -> Any:
         ## Test the waters 🧪 before diving in!
@@ -176,9 +178,50 @@ class DTMCoreEngine(SilvaEngineDynamoDBBase):
         )
         return self.graphql_execute(schema, **params)
 
+    def dtm_model_action_invoke(self, **params: Dict[str, Any]) -> Any:
+        module = self.dtm_core_inquiry(
+            endpoint_id=params.get("endpoint_id"),
+            action="get_module",
+            attributes={"module_name": params.get("module_name")},
+        )
+        self.logger.info(f"Module: {module}")
+
+        data_source = self.data_source_loader.get_data_source(
+            params.get("endpoint_id"), module["data_source_uuid"]
+        )
+        self.logger.info(f"Data Source: {data_source}")
+
+        # if module.get("source") != "S3":
+        #     module_class = getattr(
+        #         __import__(module["module_name"]), module["class_name"]
+        #     )
+        #     module_object = module_class(**data_source)
+
+        # model = self.dtm_core_inquiry(
+        #     endpoint_id=params.get("endpoint_id"),
+        #     action="get_model",
+        #     attributes={
+        #         "model_name": params.get("model_name"),
+        #         "module_uuid": module["module_uuid"],
+        #     },
+        # )
+        # self.logger.info(f"Model: {model}")
+
+        # model_action = self.dtm_core_inquiry(
+        #     endpoint_id=params.get("endpoint_id"),
+        #     action="get_model_action",
+        #     attributes={
+        #         "action_name": params.get("action_name"),
+        #         "model_uuid": model["model_uuid"],
+        #     },
+        # )
+        # self.logger.info(f"Model Action: {model_action}")
+
+        return None
+
     # Unified inquiry function
     def dtm_core_inquiry(self, **params: Dict[str, Any]) -> Any:
-        endpoint_id = params.get("endpoint_id") or self.endpoint_id
+        endpoint_id = params.get("endpoint_id")
         action = params.get("action")
         attributes = params.get("attributes")
 
@@ -284,14 +327,16 @@ class DTMCoreEngine(SilvaEngineDynamoDBBase):
 
     # Unified modification function
     def dtm_core_modification(self, **params: Dict[str, Any]) -> Any:
-        endpoint_id = params.get("endpoint_id") or self.endpoint_id
+        endpoint_id = params.get("endpoint_id")
         action = params.get("action")
         attributes = params.get("attributes")
 
         if action == "insert_update_module":
             return ModificationHandler.insert_update_module(endpoint_id, **attributes)
         elif action == "insert_update_data_source":
-            return ModificationHandler.insert_update_data_source(endpoint_id, **attributes)
+            return ModificationHandler.insert_update_data_source(
+                endpoint_id, **attributes
+            )
         elif action == "insert_update_model":
             return ModificationHandler.insert_update_model(endpoint_id, **attributes)
         elif action == "insert_update_model_action":
@@ -323,11 +368,17 @@ class DTMCoreEngine(SilvaEngineDynamoDBBase):
         elif action == "delete_model_action":
             return ModificationHandler.delete_model_action(endpoint_id, **attributes)
         elif action == "delete_primary_key_meta":
-            return ModificationHandler.delete_primary_key_meta(endpoint_id, **attributes)
+            return ModificationHandler.delete_primary_key_meta(
+                endpoint_id, **attributes
+            )
         elif action == "delete_associated_model":
-            return ModificationHandler.delete_associated_model(endpoint_id, **attributes)
+            return ModificationHandler.delete_associated_model(
+                endpoint_id, **attributes
+            )
         elif action == "delete_associated_model_action":
-            return ModificationHandler.delete_associated_model_action(endpoint_id, **attributes)
+            return ModificationHandler.delete_associated_model_action(
+                endpoint_id, **attributes
+            )
         elif action == "delete_model_action_tx":
             return ModificationHandler.delete_model_action_tx(endpoint_id, **attributes)
         else:

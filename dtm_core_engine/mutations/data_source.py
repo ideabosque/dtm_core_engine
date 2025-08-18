@@ -23,6 +23,7 @@ class InsertUpdateDataSource(Mutation):
         setting = JSON(required=False)
         connector_class_name = String(required=False)
         connector_module_name = String(required=False)
+        connector_package_name = String(required=False)
         updated_by = String(required=True)
 
     @staticmethod

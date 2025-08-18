@@ -114,8 +114,9 @@ def insert_update_data_source(
         endpoint_id=endpoint_id,
         data_source_name=kwargs.get("data_source_name", "demo-data-source"),
         setting=kwargs.get("setting", {}),
-        connector_class_name=kwargs.get("connector_class_name", "demo.DemoConnector"),
-        connector_module_name=kwargs.get("connector_module_name", "demo.connector"),
+        connector_class_name=kwargs.get("connector_class_name"),
+        connector_module_name=kwargs.get("connector_module_name"),
+        connector_package_name=kwargs.get("connector_package_name"),
         updated_by=kwargs.get("updated_by", "system"),
     )
     data_source_data = repo.upsert(key, value)

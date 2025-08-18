@@ -17,6 +17,7 @@ class DataSourceType(ObjectType):
     setting = JSON()
     connector_class_name = String()
     connector_module_name = String()
+    connector_package_name = String()
     updated_by = String()
     created_at = DateTime()
     updated_at = DateTime()
