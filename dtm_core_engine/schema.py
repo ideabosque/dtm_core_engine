@@ -21,6 +21,7 @@ from .mutations.model import DeleteModel, InsertUpdateModel
 from .mutations.model_action import DeleteModelAction, InsertUpdateModelAction
 from .mutations.model_action_tx import DeleteModelActionTx, InsertUpdateModelActionTx
 from .mutations.module import DeleteModule, InsertUpdateModule
+from .mutations.data_source import DeleteDataSource, InsertUpdateDataSource
 from .mutations.primary_key_meta import DeletePrimaryKeyMeta, InsertUpdatePrimaryKeyMeta
 from .queries.associated_model import (
     resolve_associated_model,
@@ -37,6 +38,7 @@ from .queries.model_action_tx import (
     resolve_model_action_tx_list,
 )
 from .queries.module import resolve_module, resolve_module_list
+from .queries.data_source import resolve_data_source, resolve_data_source_list
 from .queries.primary_key_meta import (
     resolve_primary_key_meta,
     resolve_primary_key_meta_list,
@@ -50,6 +52,7 @@ from .types.model import ModelListType, ModelType
 from .types.model_action import ModelActionListType, ModelActionType
 from .types.model_action_tx import ModelActionTxListType, ModelActionTxType
 from .types.module import ModuleListType, ModuleType
+from .types.data_source import DataSourceListType, DataSourceType
 from .types.primary_key_meta import PrimaryKeyMetaListType, PrimaryKeyMetaType
 
 
@@ -57,6 +60,8 @@ def type_class():
     return [
         ModuleType,
         ModuleListType,
+        DataSourceType,
+        DataSourceListType,
         ModelType,
         ModelListType,
         AssociatedModelType,
@@ -86,6 +91,19 @@ class Query(ObjectType):
         page_number=Int(required=False),
         limit=Int(required=False),
         module_name=String(required=False),
+    )
+
+    data_source = Field(
+        DataSourceType,
+        data_source_uuid=String(required=False),
+        data_source_name=String(required=False),
+    )
+
+    data_source_list = Field(
+        DataSourceListType,
+        page_number=Int(required=False),
+        limit=Int(required=False),
+        data_source_name=String(required=False),
     )
 
     model = Field(
@@ -183,6 +201,14 @@ class Query(ObjectType):
     ) -> ModuleListType:
         return resolve_module_list(info, **kwargs)
 
+    def resolve_data_source(self, info: ResolveInfo, **kwargs: Dict[str, Any]) -> DataSourceType:
+        return resolve_data_source(info, **kwargs)
+
+    def resolve_data_source_list(
+        self, info: ResolveInfo, **kwargs: Dict[str, Any]
+    ) -> DataSourceListType:
+        return resolve_data_source_list(info, **kwargs)
+
     def resolve_model(self, info: ResolveInfo, **kwargs: Dict[str, Any]) -> ModelType:
         return resolve_model(info, **kwargs)
 
@@ -245,6 +271,8 @@ class Query(ObjectType):
 class Mutations(ObjectType):
     insert_update_module = InsertUpdateModule.Field()
     delete_module = DeleteModule.Field()
+    insert_update_data_source = InsertUpdateDataSource.Field()
+    delete_data_source = DeleteDataSource.Field()
     insert_update_model = InsertUpdateModel.Field()
     delete_model = DeleteModel.Field()
     insert_update_associated_model = InsertUpdateAssociatedModel.Field()

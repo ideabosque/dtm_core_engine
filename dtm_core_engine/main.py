@@ -31,6 +31,8 @@ def deploy() -> List:
                         {"action": "ping", "label": "Ping"},
                         {"action": "module", "label": "View Module"},
                         {"action": "moduleList", "label": "View Module List"},
+                        {"action": "dataSource", "label": "View Data Source"},
+                        {"action": "dataSourceList", "label": "View Data Source List"},
                         {"action": "model", "label": "View Model"},
                         {"action": "modelList", "label": "View Model List"},
                         {"action": "associatedModel", "label": "View Associated Model"},
@@ -74,6 +76,11 @@ def deploy() -> List:
                             "label": "Create Update Module",
                         },
                         {"action": "deleteModule", "label": "Delete Module"},
+                        {
+                            "action": "insertUpdateDataSource",
+                            "label": "Create Update Data Source",
+                        },
+                        {"action": "deleteDataSource", "label": "Delete Data Source"},
                         {"action": "insertUpdateModel", "label": "Create Update Model"},
                         {"action": "deleteModel", "label": "Delete Model"},
                         {
@@ -130,9 +137,9 @@ def deploy() -> List:
                     "is_graphql": False,
                     "settings": "dtm_core",
                 },
-                "dtm_core_add_update": {
+                "dtm_core_modification": {
                     "is_static": False,
-                    "label": "DTM Core Add Update Direct",
+                    "label": "DTM Core Modification Direct",
                     "type": "RequestResponse",
                     "support_methods": ["POST"],
                     "is_auth_required": False,
@@ -184,6 +191,16 @@ class DTMCoreEngine(SilvaEngineDynamoDBBase):
         elif action == "list_modules":
             return InquiryHandler.list_modules(
                 endpoint_id, attributes.get("module_name"), attributes.get("limit")
+            )
+        elif action == "get_data_source":
+            return InquiryHandler.get_data_source(
+                endpoint_id,
+                attributes.get("data_source_uuid"),
+                attributes.get("data_source_name"),
+            )
+        elif action == "list_data_sources":
+            return InquiryHandler.list_data_sources(
+                endpoint_id, attributes.get("data_source_name"), attributes.get("limit")
             )
         elif action == "get_model":
             return InquiryHandler.get_model(
@@ -265,14 +282,16 @@ class DTMCoreEngine(SilvaEngineDynamoDBBase):
         else:
             raise ValueError(f"Unknown action: {action}")
 
-    # Unified insert/update function
-    def dtm_core_add_update(self, **params: Dict[str, Any]) -> Any:
+    # Unified modification function
+    def dtm_core_modification(self, **params: Dict[str, Any]) -> Any:
         endpoint_id = params.get("endpoint_id") or self.endpoint_id
         action = params.get("action")
         attributes = params.get("attributes")
 
         if action == "insert_update_module":
             return ModificationHandler.insert_update_module(endpoint_id, **attributes)
+        elif action == "insert_update_data_source":
+            return ModificationHandler.insert_update_data_source(endpoint_id, **attributes)
         elif action == "insert_update_model":
             return ModificationHandler.insert_update_model(endpoint_id, **attributes)
         elif action == "insert_update_model_action":
@@ -295,5 +314,21 @@ class DTMCoreEngine(SilvaEngineDynamoDBBase):
             return ModificationHandler.insert_update_model_action_tx(
                 endpoint_id, **attributes
             )
+        elif action == "delete_module":
+            return ModificationHandler.delete_module(endpoint_id, **attributes)
+        elif action == "delete_data_source":
+            return ModificationHandler.delete_data_source(endpoint_id, **attributes)
+        elif action == "delete_model":
+            return ModificationHandler.delete_model(endpoint_id, **attributes)
+        elif action == "delete_model_action":
+            return ModificationHandler.delete_model_action(endpoint_id, **attributes)
+        elif action == "delete_primary_key_meta":
+            return ModificationHandler.delete_primary_key_meta(endpoint_id, **attributes)
+        elif action == "delete_associated_model":
+            return ModificationHandler.delete_associated_model(endpoint_id, **attributes)
+        elif action == "delete_associated_model_action":
+            return ModificationHandler.delete_associated_model_action(endpoint_id, **attributes)
+        elif action == "delete_model_action_tx":
+            return ModificationHandler.delete_model_action_tx(endpoint_id, **attributes)
         else:
             raise ValueError(f"Unknown action: {action}")

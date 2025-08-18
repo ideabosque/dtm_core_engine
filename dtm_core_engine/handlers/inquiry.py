@@ -35,6 +35,32 @@ class InquiryHandler:
         return repo.list(endpoint_id=endpoint_id, module_name=module_name, limit=limit)
 
     @staticmethod
+    def get_data_source(
+        endpoint_id: str, data_source_uuid: str = None, data_source_name: str = None
+    ) -> Optional[Dict[str, Any]]:
+        from ..models.data_source import DataSourceRepo
+
+        repo = DataSourceRepo()
+        if data_source_uuid:
+            key = repo.key(endpoint_id, data_source_uuid)
+            return repo.get(key)
+        elif data_source_name:
+            data_sources = repo.list(
+                endpoint_id=endpoint_id, data_source_name=data_source_name, limit=1
+            )
+            return data_sources[0] if data_sources else None
+        return None
+
+    @staticmethod
+    def list_data_sources(
+        endpoint_id: str, data_source_name: str = None, limit: int = None
+    ) -> List[Dict[str, Any]]:
+        from ..models.data_source import DataSourceRepo
+
+        repo = DataSourceRepo()
+        return repo.list(endpoint_id=endpoint_id, data_source_name=data_source_name, limit=limit)
+
+    @staticmethod
     def get_model(
         endpoint_id: str,
         model_uuid: str = None,

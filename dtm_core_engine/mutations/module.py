@@ -18,6 +18,7 @@ class InsertUpdateModule(Mutation):
     class Arguments:
         module_uuid = String(required=True)
         module_name = String(required=False)
+        class_name = String(required=False)
         package_name = String(required=False)
         data_source_uuid = String(required=False)
         source = String(required=False)

@@ -104,6 +104,7 @@ def insert_update_module(info: ResolveInfo, **kwargs: Dict[str, Any]) -> ModuleT
         module_uuid=kwargs["module_uuid"],
         endpoint_id=endpoint_id,
         module_name=kwargs.get("module_name", "demo-module"),
+        class_name=kwargs.get("class_name", "demo.DemoModule"),
         package_name=kwargs.get("package_name", "demo.pkg"),
         data_source_uuid=data_source_uuid,
         source=kwargs.get("source", "internal"),
