@@ -90,8 +90,22 @@ def resolve_module_list(info: ResolveInfo, **kwargs: Dict[str, Any]) -> ModuleLi
 def insert_update_module(info: ResolveInfo, **kwargs: Dict[str, Any]) -> ModuleType:
     repo = ModuleRepo()
     endpoint_id = info.context["endpoint_id"]
+    module_name = kwargs.get("module_name", "demo-module")
+    
+    # Check for existing module with same name
+    existing_modules = repo.list(
+        endpoint_id=endpoint_id,
+        module_name=module_name
+    )
+    
     if "module_uuid" not in kwargs:
         kwargs["module_uuid"] = f"mod-{etcd_client.new_id()[:8]}"
+    
+    # If updating, exclude current module from uniqueness check
+    for existing in existing_modules:
+        if existing.get("module_uuid") != kwargs["module_uuid"]:
+            raise ValueError(f"Module name '{module_name}' already exists for this endpoint")
+    
     key = repo.key(endpoint_id, kwargs["module_uuid"])
 
     # Handle data_source_uuid special case - preserve existing or generate new
@@ -103,7 +117,7 @@ def insert_update_module(info: ResolveInfo, **kwargs: Dict[str, Any]) -> ModuleT
     value = dict(
         module_uuid=kwargs["module_uuid"],
         endpoint_id=endpoint_id,
-        module_name=kwargs.get("module_name", "demo-module"),
+        module_name=module_name,
         class_name=kwargs.get("class_name", "demo.DemoModule"),
         package_name=kwargs.get("package_name", "demo.pkg"),
         data_source_uuid=data_source_uuid,

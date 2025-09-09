@@ -105,14 +105,28 @@ def insert_update_data_source(
 ) -> DataSourceType:
     repo = DataSourceRepo()
     endpoint_id = info.context["endpoint_id"]
+    data_source_name = kwargs.get("data_source_name", "demo-data-source")
+    
+    # Check for existing data source with same name
+    existing_data_sources = repo.list(
+        endpoint_id=endpoint_id,
+        data_source_name=data_source_name
+    )
+    
     if "data_source_uuid" not in kwargs:
         kwargs["data_source_uuid"] = f"dts-{etcd_client.new_id()[:8]}"
+    
+    # If updating, exclude current data source from uniqueness check
+    for existing in existing_data_sources:
+        if existing.get("data_source_uuid") != kwargs["data_source_uuid"]:
+            raise ValueError(f"Data source name '{data_source_name}' already exists for this endpoint")
+    
     key = repo.key(endpoint_id, kwargs["data_source_uuid"])
 
     value = dict(
         data_source_uuid=kwargs["data_source_uuid"],
         endpoint_id=endpoint_id,
-        data_source_name=kwargs.get("data_source_name", "demo-data-source"),
+        data_source_name=data_source_name,
         setting=kwargs.get("setting", {}),
         connector_class_name=kwargs.get("connector_class_name"),
         connector_module_name=kwargs.get("connector_module_name"),

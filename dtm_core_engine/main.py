@@ -163,6 +163,23 @@ class DTMCoreEngine(SilvaEngineDynamoDBBase):
         self.logger = logger
         self.setting = setting
         self.data_source_loader = DataSourceLoader(logger)
+        self.module_classes = {}
+
+    def refresh_module_classes(self, endpoint_id: str) -> None:
+        modules = self.dtm_core_inquiry(
+            endpoint_id=endpoint_id,
+            action="list_modules",
+            attributes={},
+        )
+        self.module_classes[endpoint_id] = {}
+        for module in modules:
+            module_classes = {}
+            if module.get("source") != "S3":
+                module_class = getattr(
+                    __import__(module["module_name"]), module["class_name"]
+                )
+                module_classes.update({module["module_name"]: module_class})
+        self.module_classes[endpoint_id] = module_classes
 
     def dtm_core_graphql(self, **params: Dict[str, Any]) -> Any:
         ## Test the waters 🧪 before diving in!
